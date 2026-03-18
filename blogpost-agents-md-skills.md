@@ -10,6 +10,8 @@ O `README.md` existe para humanos. Ele explica o que o projeto faz, como instala
 
 A resposta que a comunidade encontrou: criar um **"README para máquinas"**. É disso que se trata o `AGENTS.md` e todo o ecossistema de **Agent Skills** que está surgindo em torno dele.
 
+[IMAGEM: 1. README vs AGENTS.md.png — Comparação entre README.md (para humanos) e AGENTS.md (para agentes de IA): mundos diferentes, mesmo repositório]
+
 Neste post, vamos além da documentação superficial. Vamos **abrir o código-fonte** de um AI coding agent real (OpenCode) e entender exatamente:
 
 1. Como o `AGENTS.md` é descoberto e injetado no prompt de sistema
@@ -34,6 +36,8 @@ O problema? Cada ferramenta lia seu próprio arquivo, criando fragmentação. O 
 **Codex** (OpenAI), **Cursor**, **Antigravity** (Google DeepMind), **Jules** (Google), **GitHub Copilot Coding Agent**, **Windsurf**, **OpenCode**, **Aider**, **Zed**, **Warp**, **RooCode**, **Gemini CLI**, **Devin**, e outros.
 
 Segundo o site oficial [agents.md](https://agents.md), mais de **60.000 repositórios públicos** no GitHub já incluem um context file.
+
+[IMAGEM: 2. Fragmentação → Padrão Aberto.png — Da fragmentação (cada ferramenta com seu arquivo proprietário) ao AGENTS.md como padrão aberto e agnóstico, suportado por um ecossistema unificado de ferramentas]
 
 ### O que vai dentro de um AGENTS.md?
 
@@ -77,6 +81,8 @@ Uma feature poderosa é a **hierarquia de arquivos**. No OpenCode, por exemplo:
 ```
 
 O arquivo mais próximo tem prioridade. Isso permite que um monorepo tenha regras globais na raiz e regras específicas em cada pacote.
+
+[IMAGEM: 3. Hierarquia do AGENTS.md.png — Hierarquia de carregamento do AGENTS.md: do escopo global (menor prioridade) ao subdiretório (maior prioridade), onde o arquivo mais próximo sobrescreve o mais distante]
 
 ---
 
@@ -135,6 +141,8 @@ const system = [
 ```
 
 O conteúdo do `AGENTS.md` é prefixado com `"Instructions from: /caminho/do/AGENTS.md"` e concatenado ao prompt de sistema. Isso significa que **toda mensagem** que o LLM processa já contém as instruções do seu repositório.
+
+[IMAGEM: 4. Anatomia do System Prompt.png — Montagem do system prompt: prompt base do modelo + info do ambiente + conteúdo do AGENTS.md + definição de tools (com a tool "skill" incluindo o índice das skills disponíveis)]
 
 ### 2.3 Lazy Loading: instruções aninhadas sob demanda
 
@@ -197,6 +205,8 @@ my-skill/
     └── helper.py      # Script utilitário (executado, não carregado)
 ```
 
+[IMAGEM: 5. Anatomia de uma Skill.png — Anatomia completa de uma Agent Skill: estrutura do SKILL.md (frontmatter YAML + corpo Markdown), organização do diretório, e como o agente enxerga a skill (Layer 1: índice visível → Layer 2: corpo carregado sob demanda)]
+
 ### 3.2 O Padrão: Progressive Disclosure
 
 Um recurso importante das Skills é como elas implementam o **progressive disclosure**, um padrão de design de UI emprestado para a arquitetura de agentes de IA. A ideia:
@@ -231,6 +241,8 @@ O mecanismo funciona em **três camadas**:
 
 **Por que isso importa?** A janela de contexto de um LLM é um recurso finito e precioso. Cada token desperdiçado com informação irrelevante é um token a menos para raciocínio. Progressive disclosure resolve isso: o modelo sabe *o que* existe (Layer 1), carrega *como* usar quando decidir (Layer 2), e acessa detalhes profundos *se* precisar (Layer 3).
 
+[IMAGEM: 6. Progressive Disclosure.png — As 3 camadas de progressive disclosure em detalhe: Layer 1 Indexação (~50 tokens, sempre no prompt), Layer 2 Ativação (~500 tokens, quando o modelo chama skill()), Layer 3 Referência (~2000 tokens, sob demanda via read_file)]
+
 ### 3.3 Deep Dive: Como o OpenCode Implementa Skills
 
 #### Descoberta de Skills (`skill.ts`)
@@ -257,6 +269,8 @@ A ordem de busca garante que **projeto sobrescreve global**:
 ```
 
 A compatibilidade cross-tool é intencional: uma skill criada para Claude Code em `.claude/skills/` funciona automaticamente no OpenCode.
+
+[IMAGEM: 7. Descoberta de Skills.png — Fluxo de descoberta de skills: escopos global, projeto e config/remoto convergem no Skills Registry, que alimenta a tool "skill" com o índice completo]
 
 #### A Tool `skill` como mecanismo de disclosure (`tool/skill.ts`)
 
@@ -376,6 +390,8 @@ Vamos consolidar tudo em um fluxo narrativo. Quando você inicia uma sessão com
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+[IMAGEM: 8. Fluxo Completo.png — Fluxo completo de uma sessão com AI coding agent: da inicialização (descoberta de AGENTS.md e Skills) à montagem do prompt, passando pela interação do usuário até a execução informada com skill carregada sob demanda]
+
 O ponto central: **o modelo opera em dois níveis de contexto simultâneos**. O `AGENTS.md` fornece o "como trabalhamos aqui" (sempre presente), enquanto as Skills fornecem o "como fazer isso especificamente" (sob demanda).
 
 ---
@@ -440,6 +456,8 @@ Os autores concluem:
 > "Omitir context files gerados por LLM por enquanto, contrariamente às recomendações dos desenvolvedores de agentes, e incluir apenas requisitos mínimos (e.g., tooling específico para usar com o repositório)."
 
 Traduzindo: **menos é mais**. Um AGENTS.md com 10 linhas de build commands é mais útil que um de 200 linhas gerado automaticamente.
+
+[IMAGEM: 9. Resultados — Literatura Científica.png — Resultados do estudo da ETH Zurich: 3 cenários comparados (sem context file, gerado por LLM, escrito por humano), análise de comportamento dos agentes, e conclusão "Menos é Mais"]
 
 ---
 
